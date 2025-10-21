@@ -18,14 +18,21 @@ interface Project {
   id: string;
   name: string;
   value: number;
-  payment_status: string;
+  payment_status: 'paid' | 'pending' | 'will_pay' | 'not_paid' | 'cancelled';
   start_date: string | null;
   clients: { name: string } | null;
 }
 
 export default function Finance() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [stats, setStats] = useState({ total: 0, paid: 0, pending: 0 });
+  const [stats, setStats] = useState({ 
+    total: 0, 
+    paid: 0, 
+    will_pay: 0, 
+    pending: 0, 
+    not_paid: 0, 
+    cancelled: 0 
+  });
 
   useEffect(() => {
     loadFinancialData();
@@ -42,9 +49,12 @@ export default function Finance() {
       
       const total = data.reduce((sum, p) => sum + Number(p.value), 0);
       const paid = data.filter((p) => p.payment_status === "paid").reduce((sum, p) => sum + Number(p.value), 0);
-      const pending = total - paid;
+      const will_pay = data.filter((p) => p.payment_status === "will_pay").reduce((sum, p) => sum + Number(p.value), 0);
+      const pending = data.filter((p) => p.payment_status === "pending").reduce((sum, p) => sum + Number(p.value), 0);
+      const not_paid = data.filter((p) => p.payment_status === "not_paid").reduce((sum, p) => sum + Number(p.value), 0);
+      const cancelled = data.filter((p) => p.payment_status === "cancelled").reduce((sum, p) => sum + Number(p.value), 0);
       
-      setStats({ total, paid, pending });
+      setStats({ total, paid, will_pay, pending, not_paid, cancelled });
     }
   };
 
@@ -55,7 +65,7 @@ export default function Finance() {
         <p className="text-muted-foreground">Acompanhe receitas e pagamentos</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card className="border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total em Projetos</CardTitle>
@@ -70,7 +80,7 @@ export default function Finance() {
 
         <Card className="border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recebido</CardTitle>
+            <CardTitle className="text-sm font-medium">✅ Recebido</CardTitle>
             <TrendingUp className="h-5 w-5 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -82,12 +92,48 @@ export default function Finance() {
 
         <Card className="border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pendente</CardTitle>
+            <CardTitle className="text-sm font-medium">⏳ Cliente Vai Pagar</CardTitle>
+            <DollarSign className="h-5 w-5 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-500">
+              R$ {stats.will_pay.toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">🔄 Pendente</CardTitle>
             <DollarSign className="h-5 w-5 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-500">
               R$ {stats.pending.toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">❌ Não Pago</CardTitle>
+            <DollarSign className="h-5 w-5 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-500">
+              R$ {stats.not_paid.toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">🚫 Cancelado</CardTitle>
+            <DollarSign className="h-5 w-5 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-500">
+              R$ {stats.cancelled.toFixed(2)}
             </div>
           </CardContent>
         </Card>
@@ -120,8 +166,27 @@ export default function Finance() {
                   </TableCell>
                   <TableCell>R$ {Number(project.value).toFixed(2)}</TableCell>
                   <TableCell>
-                    <Badge variant={project.payment_status === "paid" ? "default" : "secondary"}>
-                      {project.payment_status === "paid" ? "Pago" : "Pendente"}
+                    <Badge 
+                      variant={
+                        project.payment_status === "paid" ? "default" : 
+                        project.payment_status === "will_pay" ? "secondary" :
+                        project.payment_status === "pending" ? "secondary" :
+                        project.payment_status === "not_paid" ? "destructive" :
+                        "outline"
+                      }
+                      className={
+                        project.payment_status === "paid" ? "bg-green-500 hover:bg-green-600" :
+                        project.payment_status === "will_pay" ? "bg-blue-500 hover:bg-blue-600 text-white" :
+                        project.payment_status === "pending" ? "bg-orange-500 hover:bg-orange-600 text-white" :
+                        project.payment_status === "not_paid" ? "bg-red-500 hover:bg-red-600 text-white" :
+                        "bg-gray-500 hover:bg-gray-600 text-white"
+                      }
+                    >
+                      {project.payment_status === "paid" ? "✅ Pago" :
+                       project.payment_status === "will_pay" ? "⏳ Cliente Vai Pagar" :
+                       project.payment_status === "pending" ? "🔄 Pendente" :
+                       project.payment_status === "not_paid" ? "❌ Não Pago" :
+                       "🚫 Cancelado"}
                     </Badge>
                   </TableCell>
                 </TableRow>

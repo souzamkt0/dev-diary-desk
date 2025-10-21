@@ -47,7 +47,7 @@ export function CreateProjectDialog({
     start_date: "",
     end_date: "",
     value: "",
-    payment_status: "pending",
+    payment_status: "pending" as 'paid' | 'pending' | 'will_pay' | 'not_paid' | 'cancelled',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,7 +84,7 @@ export function CreateProjectDialog({
         start_date: "",
         end_date: "",
         value: "",
-        payment_status: "pending",
+        payment_status: "pending" as 'paid' | 'pending' | 'will_pay' | 'not_paid' | 'cancelled',
       });
     }
   };
@@ -150,6 +150,27 @@ export function CreateProjectDialog({
                 onChange={(e) => setFormData({ ...formData, value: e.target.value })}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="payment_status">Status de Pagamento</Label>
+            <Select
+              value={formData.payment_status}
+              onValueChange={(value: 'paid' | 'pending' | 'will_pay' | 'not_paid' | 'cancelled') => 
+                setFormData({ ...formData, payment_status: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">🔄 Pendente</SelectItem>
+                <SelectItem value="will_pay">⏳ Cliente Vai Pagar</SelectItem>
+                <SelectItem value="paid">✅ Pago</SelectItem>
+                <SelectItem value="not_paid">❌ Não Pago</SelectItem>
+                <SelectItem value="cancelled">🚫 Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
