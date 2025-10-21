@@ -123,17 +123,27 @@ export function EditProjectDialog({
       updateData.client_id = null;
     }
 
-    const { error } = await supabase
+    console.log("Dados a serem enviados:", updateData);
+    console.log("ID do projeto:", project.id);
+
+    const { data, error } = await supabase
       .from("projects")
       .update(updateData)
-      .eq("id", project.id);
+      .eq("id", project.id)
+      .select();
 
     setLoading(false);
 
     if (error) {
-      console.error("Erro ao atualizar projeto:", error);
+      console.error("Erro completo:", error);
+      console.error("Código do erro:", error.code);
+      console.error("Detalhes:", error.details);
+      console.error("Hint:", error.hint);
+      console.error("Message:", error.message);
+      
       toast.error(`Erro ao atualizar projeto: ${error.message}`);
     } else {
+      console.log("Projeto atualizado com sucesso:", data);
       toast.success("Projeto atualizado com sucesso!");
       onOpenChange(false);
       onSuccess();
