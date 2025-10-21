@@ -115,7 +115,7 @@ export default function Finance() {
                   <TableCell>{project.clients?.name || "-"}</TableCell>
                   <TableCell>
                     {project.start_date
-                      ? format(new Date(project.start_date), "dd/MM/yyyy", { locale: ptBR })
+                      ? format(new Date(project.start_date + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR })
                       : "-"}
                   </TableCell>
                   <TableCell>R$ {Number(project.value).toFixed(2)}</TableCell>

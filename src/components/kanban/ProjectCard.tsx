@@ -58,10 +58,11 @@ export function ProjectCard({ project, clientName }: ProjectCardProps) {
         
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Calendar className="h-3 w-3" />
-          {project.start_date && project.end_date ? (
+          {project.start_date || project.end_date ? (
             <span>
-              {format(new Date(project.start_date), "dd/MM", { locale: ptBR })} -{" "}
-              {format(new Date(project.end_date), "dd/MM/yy", { locale: ptBR })}
+              {project.start_date && format(new Date(project.start_date + 'T00:00:00'), "dd/MM/yy", { locale: ptBR })}
+              {project.start_date && project.end_date && " - "}
+              {project.end_date && format(new Date(project.end_date + 'T00:00:00'), "dd/MM/yy", { locale: ptBR })}
             </span>
           ) : (
             <span>Sem prazo definido</span>

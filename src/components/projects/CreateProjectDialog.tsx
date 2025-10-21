@@ -160,6 +160,11 @@ export function CreateProjectDialog({
                 type="date"
                 value={formData.start_date}
                 onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                className="[&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                style={{
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'textfield'
+                }}
               />
             </div>
 
@@ -170,6 +175,11 @@ export function CreateProjectDialog({
                 type="date"
                 value={formData.end_date}
                 onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                className="[&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                style={{
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'textfield'
+                }}
               />
             </div>
           </div>
