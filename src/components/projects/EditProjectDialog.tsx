@@ -87,27 +87,52 @@ export function EditProjectDialog({
     e.preventDefault();
     if (!project) return;
 
+    // Validação básica
+    if (!formData.name.trim()) {
+      toast.error("Nome do projeto é obrigatório");
+      return;
+    }
+
+    if (formData.value && parseFloat(formData.value) < 0) {
+      toast.error("Valor não pode ser negativo");
+      return;
+    }
+
+    if (formData.paid_value && parseFloat(formData.paid_value) < 0) {
+      toast.error("Valor pago não pode ser negativo");
+      return;
+    }
+
     setLoading(true);
+
+    const updateData: any = {
+      name: formData.name,
+      description: formData.description || null,
+      start_date: formData.start_date || null,
+      end_date: formData.end_date || null,
+      value: parseFloat(formData.value) || 0,
+      paid_value: parseFloat(formData.paid_value) || 0,
+      payment_status: formData.payment_status,
+      status: formData.status,
+    };
+
+    // Só adiciona client_id se não estiver vazio
+    if (formData.client_id && formData.client_id.trim() !== "") {
+      updateData.client_id = formData.client_id;
+    } else {
+      updateData.client_id = null;
+    }
 
     const { error } = await supabase
       .from("projects")
-      .update({
-        name: formData.name,
-        description: formData.description || null,
-        client_id: formData.client_id || null,
-        start_date: formData.start_date || null,
-        end_date: formData.end_date || null,
-        value: parseFloat(formData.value) || 0,
-        paid_value: parseFloat(formData.paid_value) || 0,
-        payment_status: formData.payment_status,
-        status: formData.status,
-      })
+      .update(updateData)
       .eq("id", project.id);
 
     setLoading(false);
 
     if (error) {
-      toast.error("Erro ao atualizar projeto");
+      console.error("Erro ao atualizar projeto:", error);
+      toast.error(`Erro ao atualizar projeto: ${error.message}`);
     } else {
       toast.success("Projeto atualizado com sucesso!");
       onOpenChange(false);
