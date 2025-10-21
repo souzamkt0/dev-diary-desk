@@ -23,9 +23,10 @@ interface KanbanColumnProps {
   title: string;
   projects: Project[];
   clients: Client[];
+  onEditProject?: (project: Project) => void;
 }
 
-export function KanbanColumn({ id, title, projects, clients }: KanbanColumnProps) {
+export function KanbanColumn({ id, title, projects, clients, onEditProject }: KanbanColumnProps) {
   const { setNodeRef } = useDroppable({ id });
 
   return (
@@ -47,6 +48,7 @@ export function KanbanColumn({ id, title, projects, clients }: KanbanColumnProps
               key={project.id}
               project={project}
               clientName={clients.find((c) => c.id === project.client_id)?.name}
+              onEdit={onEditProject}
             />
           ))}
         </div>

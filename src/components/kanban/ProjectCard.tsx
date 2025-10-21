@@ -22,9 +22,10 @@ interface Project {
 interface ProjectCardProps {
   project: Project;
   clientName?: string;
+  onEdit?: (project: Project) => void;
 }
 
-export function ProjectCard({ project, clientName }: ProjectCardProps) {
+export function ProjectCard({ project, clientName, onEdit }: ProjectCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: project.id,
   });
@@ -126,19 +127,21 @@ export function ProjectCard({ project, clientName }: ProjectCardProps) {
           )}
         </div>
 
-        {/* Botão Ver Detalhes */}
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full h-8 text-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            // TODO: Implementar modal de detalhes
-          }}
-        >
-          <Eye className="h-3 w-3 mr-1" />
-          Ver Detalhes
-        </Button>
+        {/* Botões de Ação */}
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1 h-8 text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit?.(project);
+            }}
+          >
+            <Eye className="h-3 w-3 mr-1" />
+            Editar
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

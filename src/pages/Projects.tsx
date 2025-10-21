@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { CreateProjectDialog } from "@/components/projects/CreateProjectDialog";
+import { EditProjectDialog } from "@/components/projects/EditProjectDialog";
 
 interface Project {
   id: string;
@@ -17,7 +18,8 @@ interface Project {
   start_date: string | null;
   end_date: string | null;
   value: number;
-  payment_status: string;
+  paid_value?: number;
+  payment_status: 'paid' | 'pending' | 'will_pay' | 'not_paid' | 'cancelled';
 }
 
 interface Client {
@@ -30,6 +32,8 @@ export default function Projects() {
   const [clients, setClients] = useState<Client[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   useEffect(() => {
     loadProjects();
@@ -39,7 +43,7 @@ export default function Projects() {
   const loadProjects = async () => {
     const { data, error } = await supabase
       .from("projects")
-      .select("*")
+      .select("*, clients(name)")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -82,6 +86,11 @@ export default function Projects() {
     }
   };
 
+  const handleEditProject = (project: Project) => {
+    setSelectedProject(project);
+    setShowEditDialog(true);
+  };
+
   const columns = [
     { id: "todo", title: "A Fazer", status: "todo" as const },
     { id: "in_progress", title: "Em Progresso", status: "in_progress" as const },
@@ -116,6 +125,7 @@ export default function Projects() {
               title={column.title}
               projects={projects.filter((p) => p.status === column.status)}
               clients={clients}
+              onEditProject={handleEditProject}
             />
           ))}
         </div>
@@ -133,6 +143,14 @@ export default function Projects() {
       <CreateProjectDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
+        clients={clients}
+        onSuccess={loadProjects}
+      />
+
+      <EditProjectDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        project={selectedProject}
         clients={clients}
         onSuccess={loadProjects}
       />

@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, FolderKanban, DollarSign, Clock, TrendingUp, Calendar, Target, Zap } from "lucide-react";
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
 
 interface Stats {
   clients: number;
@@ -28,6 +29,13 @@ interface RecentProject {
   start_date: string;
 }
 
+interface ChartData {
+  month: string;
+  revenue: number;
+  hours: number;
+  projects: number;
+}
+
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats>({
     clients: 0,
@@ -41,6 +49,7 @@ export default function Dashboard() {
     pendingPayments: 0,
   });
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
+  const [chartData, setChartData] = useState<ChartData[]>([]);
 
   useEffect(() => {
     loadStats();
@@ -64,7 +73,8 @@ export default function Dashboard() {
       pendingPaymentsRes,
       timeTodayRes, 
       timeMonthRes,
-      recentProjectsRes
+      recentProjectsRes,
+      chartDataRes
     ] = await Promise.all([
       supabase.from("clients").select("id", { count: "exact" }),
       supabase.from("projects").select("id", { count: "exact" }),
@@ -75,7 +85,8 @@ export default function Dashboard() {
       supabase.from("projects").select("value", "paid_value").in("payment_status", ["pending", "will_pay"]),
       supabase.from("time_entries").select("duration_minutes").gte("start_time", today),
       supabase.from("time_entries").select("duration_minutes").gte("start_time", monthStart),
-      supabase.from("projects").select("id, name, status, start_date, value, clients(name)").order("created_at", { ascending: false }).limit(5)
+      supabase.from("projects").select("id, name, status, start_date, value, clients(name)").order("created_at", { ascending: false }).limit(5),
+      loadChartData()
     ]);
 
     const monthlyRevenue = monthlyRevenueRes.data?.reduce((sum, p) => sum + (Number(p.paid_value) || 0), 0) || 0;
@@ -105,6 +116,35 @@ export default function Dashboard() {
       value: p.value,
       start_date: p.start_date
     })) || []);
+
+    setChartData(chartDataRes);
+  };
+
+  const loadChartData = async (): Promise<ChartData[]> => {
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = subMonths(new Date(), i);
+      const monthStart = startOfMonth(date).toISOString().split("T")[0];
+      const monthEnd = endOfMonth(date).toISOString().split("T")[0];
+      
+      const [revenueRes, hoursRes, projectsRes] = await Promise.all([
+        supabase.from("projects").select("paid_value").eq("payment_status", "paid").gte("start_date", monthStart).lte("start_date", monthEnd),
+        supabase.from("time_entries").select("duration_minutes").gte("start_time", monthStart).lte("start_time", monthEnd),
+        supabase.from("projects").select("id").gte("start_date", monthStart).lte("start_date", monthEnd)
+      ]);
+
+      const revenue = revenueRes.data?.reduce((sum, p) => sum + (Number(p.paid_value) || 0), 0) || 0;
+      const hours = hoursRes.data?.reduce((sum, t) => sum + (t.duration_minutes || 0), 0) || 0;
+      const projects = projectsRes.data?.length || 0;
+
+      months.push({
+        month: format(date, "MMM", { locale: ptBR }),
+        revenue,
+        hours: Math.round(hours / 60 * 10) / 10,
+        projects
+      });
+    }
+    return months;
   };
 
   const statCards = [
@@ -204,6 +244,63 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Gráficos */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Gráfico de Receita */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Evolução da Receita (6 meses)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value: number) => [`R$ ${value.toFixed(2)}`, "Receita"]}
+                  labelFormatter={(label) => `Mês: ${label}`}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="#10b981" 
+                  strokeWidth={2}
+                  dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Gráfico de Horas */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Horas Trabalhadas (6 meses)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value: number) => [`${value}h`, "Horas"]}
+                  labelFormatter={(label) => `Mês: ${label}`}
+                />
+                <Bar dataKey="hours" fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Projetos Recentes e Resumo */}
