@@ -1,0 +1,301 @@
+/* Estilos customizados para o Canvas de Estratégias */
+
+/* Garantir que as conexões sejam visíveis */
+.react-flow__edge {
+  stroke: #f97316 !important;
+  stroke-width: 3px !important;
+  z-index: 1;
+}
+
+.react-flow__edge-path {
+  stroke: #f97316 !important;
+  stroke-width: 3px !important;
+  fill: none;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #ea580c !important;
+  stroke-width: 4px !important;
+}
+
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: #ea580c !important;
+  stroke-width: 4px !important;
+}
+
+/* Animações das conexões */
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke-dasharray: 5;
+  animation: dashdraw 0.5s linear infinite;
+}
+
+@keyframes dashdraw {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+/* Marcadores das setas */
+.react-flow__arrowhead {
+  fill: #f97316 !important;
+  stroke: #f97316 !important;
+  stroke-width: 2px !important;
+}
+
+.react-flow__edge .react-flow__arrowhead {
+  fill: #f97316 !important;
+  stroke: #f97316 !important;
+  stroke-width: 2px !important;
+}
+
+/* Garantir visibilidade das setas */
+.react-flow__edge-marker {
+  fill: #f97316 !important;
+  stroke: #f97316 !important;
+  stroke-width: 2px !important;
+}
+
+/* Linha de conexão durante o drag */
+.react-flow__connection-line {
+  stroke: #f97316 !important;
+  stroke-width: 2px !important;
+  stroke-dasharray: 5;
+}
+
+/* Handles dos nós */
+.react-flow__handle {
+  width: 12px !important;
+  height: 12px !important;
+  background: #f97316 !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-flow__handle-top {
+  top: -6px !important;
+}
+
+.react-flow__handle-bottom {
+  bottom: -6px !important;
+}
+
+.react-flow__handle-left {
+  left: -6px !important;
+}
+
+.react-flow__handle-right {
+  right: -6px !important;
+}
+
+/* Hover effects */
+.react-flow__handle:hover {
+  background: #ea580c !important;
+  transform: scale(1.25) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Handle ativo durante conexão */
+.react-flow__handle.connecting {
+  background: #ea580c !important;
+  transform: scale(1.3) !important;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.3) !important;
+}
+
+/* Handle válido para conexão */
+.react-flow__handle.valid {
+  background: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Seleção de nós */
+.react-flow__node.selected {
+  box-shadow: 0 0 0 2px #f97316 !important;
+}
+
+/* Background do canvas */
+.react-flow__background {
+  background-color: #f8fafc !important;
+}
+
+.react-flow__background.dark {
+  background-color: #1f2937 !important;
+}
+
+/* Controles */
+.react-flow__controls {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.react-flow__controls-button {
+  background: #ffffff !important;
+  border: none !important;
+  color: #374151 !important;
+}
+
+.react-flow__controls-button:hover {
+  background: #f3f4f6 !important;
+  color: #f97316 !important;
+}
+
+/* MiniMap */
+.react-flow__minimap {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+}
+
+/* Painel de informações */
+.react-flow__panel {
+  background: transparent !important;
+}
+
+/* Scrollbar customizada */
+.react-flow__viewport::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.react-flow__viewport::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.react-flow__viewport::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.react-flow__viewport::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Botão de exclusão dos nós */
+.react-flow__node .delete-button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  background: #ef4444;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.react-flow__node:hover .delete-button {
+  opacity: 1;
+}
+
+.react-flow__node .delete-button:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.react-flow__node .delete-button:active {
+  transform: scale(0.95);
+}
+
+/* Ícone de lixeira */
+.react-flow__node .delete-button svg {
+  width: 12px;
+  height: 12px;
+  color: #ffffff;
+}
+
+/* Estilos para exportação PDF - apenas durante a captura */
+.react-flow.exporting {
+  background: #ffffff !important;
+}
+
+.react-flow.exporting .react-flow__background {
+  background: #f8fafc !important;
+}
+
+.react-flow.exporting .react-flow__background.dark {
+  background: #ffffff !important;
+}
+
+/* Garantir que o canvas seja capturado corretamente */
+.react-flow.exporting .react-flow__viewport {
+  background: #ffffff !important;
+}
+
+/* Melhorar visibilidade dos elementos para PDF - apenas durante exportação */
+.react-flow.exporting .react-flow__node {
+  filter: none !important;
+  transform: none !important;
+}
+
+.react-flow.exporting .react-flow__edge {
+  filter: none !important;
+  transform: none !important;
+}
+
+/* Canvas normal - permitir movimento livre */
+.react-flow {
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+
+.react-flow__viewport {
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+
+.react-flow__renderer {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Permitir movimento dos nós */
+.react-flow__node {
+  cursor: grab !important;
+}
+
+.react-flow__node:active {
+  cursor: grabbing !important;
+}
+
+/* Permitir movimento do canvas */
+.react-flow__pane {
+  cursor: grab !important;
+}
+
+.react-flow__pane:active {
+  cursor: grabbing !important;
+}
+
+/* Garantir que os handles não apareçam no PDF */
+@media print {
+  .react-flow__handle {
+    display: none !important;
+  }
+  
+  .react-flow__controls {
+    display: none !important;
+  }
+  
+  .react-flow__minimap {
+    display: none !important;
+  }
+  
+  .react-flow__panel {
+    display: none !important;
+  }
+}

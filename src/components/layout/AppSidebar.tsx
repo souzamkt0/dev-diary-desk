@@ -5,6 +5,7 @@ import {
   Users,
   DollarSign,
   Clock,
+  Workflow,
   LogOut,
 } from "lucide-react";
 import {
@@ -29,6 +30,7 @@ const menuItems = [
   { title: "Clientes", url: "/clients", icon: Users },
   { title: "Financeiro", url: "/finance", icon: DollarSign },
   { title: "Tempo", url: "/time", icon: Clock },
+  { title: "Canvas", url: "/canvas", icon: Workflow },
 ];
 
 export function AppSidebar() {
