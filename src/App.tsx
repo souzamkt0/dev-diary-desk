@@ -13,6 +13,8 @@ import Clients from "./pages/Clients";
 import Finance from "./pages/Finance";
 import Time from "./pages/Time";
 import Canvas from "./pages/Canvas";
+import CanvasTest from "./pages/CanvasTest";
+import CanvasSimple from "./pages/CanvasSimple";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -51,7 +53,7 @@ function ProtectedRoutes() {
         <Route path="/clients" element={<Clients />} />
         <Route path="/finance" element={<Finance />} />
         <Route path="/time" element={<Time />} />
-        <Route path="/canvas" element={<Canvas />} />
+            <Route path="/canvas" element={<Canvas />} />
       </Routes>
     </AppLayout>
   );

@@ -67,7 +67,9 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize,
-  Minimize
+  Minimize,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -384,6 +386,8 @@ export default function Canvas() {
   const [isRunning, setIsRunning] = useState(false);
   const [strategyName, setStrategyName] = useState('Nova Estratégia');
   const [showHandles, setShowHandles] = useState(true);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [showComponents, setShowComponents] = useState(true);
 
   // Conectar nós
   const onConnect = useCallback(
@@ -727,43 +731,60 @@ export default function Canvas() {
     reader.readAsText(file);
   };
 
-  // Tipos de nós disponíveis
+  // Tipos de nós organizados por categoria
   const nodeTypesList = [
-    { type: 'trigger', label: 'Gatilho', icon: Zap, color: 'bg-blue-500' },
-    { type: 'action', label: 'Ação', icon: Play, color: 'bg-green-500' },
-    { type: 'condition', label: 'Condição', icon: Filter, color: 'bg-yellow-500' },
-    { type: 'data', label: 'Dados', icon: Database, color: 'bg-purple-500' },
-    { type: 'integration', label: 'Integração', icon: Globe, color: 'bg-indigo-500' },
-    { type: 'notification', label: 'Notificação', icon: MessageSquare, color: 'bg-pink-500' },
-    { type: 'decision', label: 'Decisão', icon: Target, color: 'bg-orange-500' },
-    { type: 'delay', label: 'Atraso', icon: Clock, color: 'bg-gray-500' },
-    { type: 'webhook', label: 'Webhook', icon: ArrowRight, color: 'bg-cyan-500' },
-    { type: 'email', label: 'Email', icon: Mail, color: 'bg-red-500' },
-    { type: 'sms', label: 'SMS', icon: Phone, color: 'bg-teal-500' },
-    { type: 'task', label: 'Tarefa', icon: CheckCircle, color: 'bg-amber-500' },
-    { type: 'lead', label: 'Lead', icon: Users, color: 'bg-emerald-500' },
-    { type: 'opportunity', label: 'Oportunidade', icon: TrendingUp, color: 'bg-violet-500' },
-    { type: 'deal', label: 'Negócio', icon: DollarSign, color: 'bg-rose-500' },
-    { type: 'customer', label: 'Cliente', icon: Heart, color: 'bg-sky-500' },
-    { type: 'campaign', label: 'Campanha', icon: Rocket, color: 'bg-lime-500' },
-    { type: 'report', label: 'Relatório', icon: BarChart3, color: 'bg-fuchsia-500' },
-    { type: 'automation', label: 'Automação', icon: Wrench, color: 'bg-stone-500' },
-    { type: 'workflow', label: 'Workflow', icon: Settings, color: 'bg-slate-500' },
-    { type: 'api', label: 'API', icon: Globe, color: 'bg-zinc-500' },
-    { type: 'database', label: 'Banco', icon: Database, color: 'bg-neutral-500' },
-    { type: 'form', label: 'Formulário', icon: FileText, color: 'bg-orange-400' },
-    { type: 'chat', label: 'Chat', icon: MessageSquare, color: 'bg-blue-400' },
-    { type: 'meeting', label: 'Reunião', icon: Calendar, color: 'bg-green-400' },
-    { type: 'followup', label: 'Follow-up', icon: ArrowRight, color: 'bg-yellow-400' },
-    { type: 'reminder', label: 'Lembrete', icon: Clock, color: 'bg-purple-400' },
-    { type: 'approval', label: 'Aprovação', icon: CheckCircle, color: 'bg-green-600' },
-    { type: 'rejection', label: 'Rejeição', icon: AlertCircle, color: 'bg-red-600' },
-    { type: 'success', label: 'Sucesso', icon: CheckCircle, color: 'bg-green-700' },
-    { type: 'error', label: 'Erro', icon: AlertCircle, color: 'bg-red-700' },
-    { type: 'warning', label: 'Aviso', icon: AlertCircle, color: 'bg-yellow-600' },
-    { type: 'info', label: 'Info', icon: Eye, color: 'bg-blue-600' },
-    { type: 'custom', label: 'Personalizado', icon: Settings, color: 'bg-gray-600' },
+    // Gatilhos
+    { type: 'trigger', label: 'Gatilho', icon: Zap, color: 'bg-blue-500', category: 'triggers' },
+    { type: 'webhook', label: 'Webhook', icon: ArrowRight, color: 'bg-cyan-500', category: 'triggers' },
+    { type: 'form', label: 'Formulário', icon: FileText, color: 'bg-orange-400', category: 'triggers' },
+    { type: 'api', label: 'API', icon: Globe, color: 'bg-zinc-500', category: 'triggers' },
+    
+    // Ações
+    { type: 'action', label: 'Ação', icon: Play, color: 'bg-green-500', category: 'actions' },
+    { type: 'email', label: 'Email', icon: Mail, color: 'bg-red-500', category: 'actions' },
+    { type: 'sms', label: 'SMS', icon: Phone, color: 'bg-teal-500', category: 'actions' },
+    { type: 'notification', label: 'Notificação', icon: MessageSquare, color: 'bg-pink-500', category: 'actions' },
+    { type: 'task', label: 'Tarefa', icon: CheckCircle, color: 'bg-amber-500', category: 'actions' },
+    { type: 'integration', label: 'Integração', icon: Globe, color: 'bg-indigo-500', category: 'actions' },
+    { type: 'automation', label: 'Automação', icon: Wrench, color: 'bg-stone-500', category: 'actions' },
+    { type: 'workflow', label: 'Workflow', icon: Settings, color: 'bg-slate-500', category: 'actions' },
+    
+    // CRM
+    { type: 'lead', label: 'Lead', icon: Users, color: 'bg-emerald-500', category: 'crm' },
+    { type: 'opportunity', label: 'Oportunidade', icon: TrendingUp, color: 'bg-violet-500', category: 'crm' },
+    { type: 'deal', label: 'Negócio', icon: DollarSign, color: 'bg-rose-500', category: 'crm' },
+    { type: 'customer', label: 'Cliente', icon: Heart, color: 'bg-sky-500', category: 'crm' },
+    { type: 'campaign', label: 'Campanha', icon: Rocket, color: 'bg-lime-500', category: 'crm' },
+    { type: 'chat', label: 'Chat', icon: MessageSquare, color: 'bg-blue-400', category: 'crm' },
+    { type: 'meeting', label: 'Reunião', icon: Calendar, color: 'bg-green-400', category: 'crm' },
+    { type: 'followup', label: 'Follow-up', icon: ArrowRight, color: 'bg-yellow-400', category: 'crm' },
+    { type: 'reminder', label: 'Lembrete', icon: Clock, color: 'bg-purple-400', category: 'crm' },
+    { type: 'report', label: 'Relatório', icon: BarChart3, color: 'bg-fuchsia-500', category: 'crm' },
+    
+    // Lógica
+    { type: 'condition', label: 'Condição', icon: Filter, color: 'bg-yellow-500', category: 'logic' },
+    { type: 'decision', label: 'Decisão', icon: Target, color: 'bg-orange-500', category: 'logic' },
+    { type: 'delay', label: 'Atraso', icon: Clock, color: 'bg-gray-500', category: 'logic' },
+    { type: 'data', label: 'Dados', icon: Database, color: 'bg-purple-500', category: 'logic' },
+    { type: 'database', label: 'Banco', icon: Database, color: 'bg-neutral-500', category: 'logic' },
+    
+    // Status
+    { type: 'success', label: 'Sucesso', icon: CheckCircle, color: 'bg-green-700', category: 'status' },
+    { type: 'error', label: 'Erro', icon: AlertCircle, color: 'bg-red-700', category: 'status' },
+    { type: 'warning', label: 'Aviso', icon: AlertCircle, color: 'bg-yellow-600', category: 'status' },
+    { type: 'info', label: 'Info', icon: Eye, color: 'bg-blue-600', category: 'status' },
+    { type: 'approval', label: 'Aprovação', icon: CheckCircle, color: 'bg-green-600', category: 'status' },
+    { type: 'rejection', label: 'Rejeição', icon: AlertCircle, color: 'bg-red-600', category: 'status' },
+    { type: 'custom', label: 'Personalizado', icon: Settings, color: 'bg-gray-600', category: 'status' },
   ];
+
+  // Função para filtrar nós por categoria
+  const getFilteredNodeTypes = () => {
+    if (activeCategory === 'all') {
+      return nodeTypesList;
+    }
+    return nodeTypesList.filter(node => node.category === activeCategory);
+  };
 
   return (
     <div className="h-screen flex flex-col">
@@ -836,22 +857,110 @@ export default function Canvas() {
           </div>
         </div>
         
-        {/* Menu de Componentes */}
-        <div className="flex flex-wrap gap-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mr-2">Componentes:</span>
-          {nodeTypesList.map((nodeType) => {
-            const IconComponent = nodeType.icon;
-            return (
+        {/* Menu de Componentes Organizado */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
               <button
-                key={nodeType.type}
-                onClick={() => addNode(nodeType.type)}
-                className={`px-3 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-orange-400 transition-colors ${nodeType.color} text-white text-sm flex items-center space-x-2`}
+                onClick={() => setShowComponents(!showComponents)}
+                className="flex items-center space-x-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-orange-600 transition-colors"
               >
-                <IconComponent className="w-4 h-4" />
-                <span>{nodeType.label}</span>
+                <span>Componentes</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  ({getFilteredNodeTypes().length} de {nodeTypesList.length})
+                </span>
+                {showComponents ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
               </button>
-            );
-          })}
+            </div>
+          </div>
+          
+          {showComponents && (
+            <>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setActiveCategory('all')}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                    activeCategory === 'all' 
+                      ? 'bg-orange-500 text-white' 
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-orange-100 dark:hover:bg-orange-900'
+                  }`}
+                >
+                  Todos
+                </button>
+                <button
+                  onClick={() => setActiveCategory('triggers')}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                    activeCategory === 'triggers' 
+                      ? 'bg-orange-500 text-white' 
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-orange-100 dark:hover:bg-orange-900'
+                  }`}
+                >
+                  Gatilhos
+                </button>
+                <button
+                  onClick={() => setActiveCategory('actions')}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                    activeCategory === 'actions' 
+                      ? 'bg-orange-500 text-white' 
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-orange-100 dark:hover:bg-orange-900'
+                  }`}
+                >
+                  Ações
+                </button>
+                <button
+                  onClick={() => setActiveCategory('crm')}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                    activeCategory === 'crm' 
+                      ? 'bg-orange-500 text-white' 
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-orange-100 dark:hover:bg-orange-900'
+                  }`}
+                >
+                  CRM
+                </button>
+                <button
+                  onClick={() => setActiveCategory('logic')}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                    activeCategory === 'logic' 
+                      ? 'bg-orange-500 text-white' 
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-orange-100 dark:hover:bg-orange-900'
+                  }`}
+                >
+                  Lógica
+                </button>
+                <button
+                  onClick={() => setActiveCategory('status')}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                    activeCategory === 'status' 
+                      ? 'bg-orange-500 text-white' 
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-orange-100 dark:hover:bg-orange-900'
+                  }`}
+                >
+                  Status
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-4 gap-2 max-h-32 overflow-y-auto">
+                {getFilteredNodeTypes().map((nodeType) => {
+                  const IconComponent = nodeType.icon;
+                  return (
+                    <button
+                      key={nodeType.type}
+                      onClick={() => addNode(nodeType.type)}
+                      className={`p-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-orange-400 transition-colors ${nodeType.color} text-white text-xs flex flex-col items-center space-y-1`}
+                      title={nodeType.label}
+                    >
+                      <IconComponent className="w-4 h-4" />
+                      <span className="text-xs">{nodeType.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
