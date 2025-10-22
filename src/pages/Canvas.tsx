@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import {
   ReactFlow,
   Node,
@@ -142,43 +142,43 @@ function GenericNode({ data, selected, type, onLabelChange, onDescriptionChange,
   );
 }
 
-// Tipos de nós customizados para CRM
-const nodeTypes: NodeTypes = {
-  trigger: (props) => <GenericNode {...props} type="trigger" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  action: (props) => <GenericNode {...props} type="action" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  condition: (props) => <GenericNode {...props} type="condition" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  data: (props) => <GenericNode {...props} type="data" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  integration: (props) => <GenericNode {...props} type="integration" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  notification: (props) => <GenericNode {...props} type="notification" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  decision: (props) => <GenericNode {...props} type="decision" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  delay: (props) => <GenericNode {...props} type="delay" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  webhook: (props) => <GenericNode {...props} type="webhook" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  email: (props) => <GenericNode {...props} type="email" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  sms: (props) => <GenericNode {...props} type="sms" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  task: (props) => <GenericNode {...props} type="task" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  lead: (props) => <GenericNode {...props} type="lead" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  opportunity: (props) => <GenericNode {...props} type="opportunity" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  deal: (props) => <GenericNode {...props} type="deal" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  customer: (props) => <GenericNode {...props} type="customer" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  campaign: (props) => <GenericNode {...props} type="campaign" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  report: (props) => <GenericNode {...props} type="report" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  automation: (props) => <GenericNode {...props} type="automation" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  workflow: (props) => <GenericNode {...props} type="workflow" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  api: (props) => <GenericNode {...props} type="api" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  database: (props) => <GenericNode {...props} type="database" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  form: (props) => <GenericNode {...props} type="form" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  chat: (props) => <GenericNode {...props} type="chat" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  meeting: (props) => <GenericNode {...props} type="meeting" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  followup: (props) => <GenericNode {...props} type="followup" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  reminder: (props) => <GenericNode {...props} type="reminder" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  approval: (props) => <GenericNode {...props} type="approval" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  rejection: (props) => <GenericNode {...props} type="rejection" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  success: (props) => <GenericNode {...props} type="success" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  error: (props) => <GenericNode {...props} type="error" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  warning: (props) => <GenericNode {...props} type="warning" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  info: (props) => <GenericNode {...props} type="info" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-  custom: (props) => <GenericNode {...props} type="custom" onDelete={props.data?.onDelete} showHandles={props.data?.showHandles} />,
-};
+// Criar tipos de nós com callbacks
+const createNodeTypes = (updateNodeLabel: (nodeId: string, newLabel: string) => void, updateNodeDescription: (nodeId: string, newDescription: string) => void, deleteNode: (nodeId: string) => void, showHandles: boolean): NodeTypes => ({
+  trigger: (props) => <GenericNode {...props} type="trigger" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  action: (props) => <GenericNode {...props} type="action" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  condition: (props) => <GenericNode {...props} type="condition" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  data: (props) => <GenericNode {...props} type="data" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  integration: (props) => <GenericNode {...props} type="integration" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  notification: (props) => <GenericNode {...props} type="notification" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  decision: (props) => <GenericNode {...props} type="decision" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  delay: (props) => <GenericNode {...props} type="delay" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  webhook: (props) => <GenericNode {...props} type="webhook" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  email: (props) => <GenericNode {...props} type="email" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  sms: (props) => <GenericNode {...props} type="sms" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  task: (props) => <GenericNode {...props} type="task" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  lead: (props) => <GenericNode {...props} type="lead" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  opportunity: (props) => <GenericNode {...props} type="opportunity" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  deal: (props) => <GenericNode {...props} type="deal" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  customer: (props) => <GenericNode {...props} type="customer" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  campaign: (props) => <GenericNode {...props} type="campaign" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  report: (props) => <GenericNode {...props} type="report" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  automation: (props) => <GenericNode {...props} type="automation" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  workflow: (props) => <GenericNode {...props} type="workflow" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  api: (props) => <GenericNode {...props} type="api" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  database: (props) => <GenericNode {...props} type="database" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  form: (props) => <GenericNode {...props} type="form" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  chat: (props) => <GenericNode {...props} type="chat" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  meeting: (props) => <GenericNode {...props} type="meeting" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  followup: (props) => <GenericNode {...props} type="followup" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  reminder: (props) => <GenericNode {...props} type="reminder" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  approval: (props) => <GenericNode {...props} type="approval" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  rejection: (props) => <GenericNode {...props} type="rejection" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  success: (props) => <GenericNode {...props} type="success" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  error: (props) => <GenericNode {...props} type="error" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  warning: (props) => <GenericNode {...props} type="warning" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  info: (props) => <GenericNode {...props} type="info" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+  custom: (props) => <GenericNode {...props} type="custom" onLabelChange={(newLabel) => updateNodeLabel(props.id, newLabel)} onDescriptionChange={(newDescription) => updateNodeDescription(props.id, newDescription)} onDelete={() => deleteNode(props.id)} showHandles={showHandles} />,
+});
 
 // Tipos de conexões customizados
 const edgeTypes: EdgeTypes = {};
@@ -194,10 +194,40 @@ function BaseNode({ data, selected, type, children, onLabelChange, onDescription
   onDelete?: () => void;
   showHandles?: boolean;
 }) {
-  const [isEditingLabel, setIsEditingLabel] = useState(false);
-  const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [tempLabel, setTempLabel] = useState(data.label);
-  const [tempDescription, setTempDescription] = useState(data.description || '');
+  const labelRef = useRef<HTMLDivElement | null>(null);
+  const descriptionRef = useRef<HTMLDivElement | null>(null);
+
+  // Sincronizar estados temporários quando os dados mudam
+  useEffect(() => {
+    if (labelRef.current) {
+      const next = data.label || '';
+      if (labelRef.current.textContent !== next) {
+        labelRef.current.textContent = next;
+      }
+    }
+  }, [data.label]);
+
+  useEffect(() => {
+    if (descriptionRef.current) {
+      const next = data.description || '';
+      if (descriptionRef.current.textContent !== next) {
+        descriptionRef.current.textContent = next;
+      }
+    }
+  }, [data.description]);
+
+  const focusEditable = (ref: React.RefObject<HTMLDivElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    el.focus();
+    if (typeof window !== 'undefined') {
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    }
+  };
 
   const getNodeColor = () => {
     const colors = {
@@ -239,34 +269,48 @@ function BaseNode({ data, selected, type, children, onLabelChange, onDescription
     return colors[type as keyof typeof colors] || 'bg-gray-500';
   };
 
-  const handleLabelSave = () => {
-    if (onLabelChange) {
-      onLabelChange(tempLabel);
+  const handleLabelBlur = () => {
+    const rawValue = (labelRef.current?.textContent ?? '').trim();
+    const nextValue = rawValue || 'Novo Nó';
+    if (labelRef.current) {
+      labelRef.current.textContent = nextValue;
     }
-    setIsEditingLabel(false);
+    if (nextValue !== (data.label || '')) {
+      onLabelChange?.(nextValue);
+    }
   };
 
-  const handleDescriptionSave = () => {
-    if (onDescriptionChange) {
-      onDescriptionChange(tempDescription);
-    }
-    setIsEditingDescription(false);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent, isLabel: boolean) => {
+  const handleLabelKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter') {
-      if (isLabel) {
-        handleLabelSave();
-      } else {
-        handleDescriptionSave();
-      }
+      e.preventDefault();
+      (e.currentTarget as HTMLDivElement).blur();
     } else if (e.key === 'Escape') {
-      if (isLabel) {
-        setTempLabel(data.label);
-        setIsEditingLabel(false);
-      } else {
-        setTempDescription(data.description || '');
-        setIsEditingDescription(false);
+      e.preventDefault();
+      const original = data.label || '';
+      if (labelRef.current) {
+        labelRef.current.textContent = original;
+        labelRef.current.blur();
+      }
+    }
+  };
+
+  const handleDescriptionBlur = () => {
+    const nextValue = (descriptionRef.current?.textContent ?? '').trim();
+    if (nextValue !== (data.description || '')) {
+      onDescriptionChange?.(nextValue);
+    }
+  };
+
+  const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      (e.currentTarget as HTMLDivElement).blur();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      const original = data.description || '';
+      if (descriptionRef.current) {
+        descriptionRef.current.textContent = original;
+        descriptionRef.current.blur();
       }
     }
   };
@@ -328,51 +372,70 @@ function BaseNode({ data, selected, type, children, onLabelChange, onDescription
       </div>
       
       {/* Label editável */}
-      <div className="text-white text-sm font-medium mt-1">
-        {isEditingLabel ? (
-          <input
-            type="text"
-            value={tempLabel}
-            onChange={(e) => setTempLabel(e.target.value)}
-            onBlur={handleLabelSave}
-            onKeyDown={(e) => handleKeyPress(e, true)}
-            className="bg-transparent border-none outline-none text-white text-sm font-medium w-full"
-            autoFocus
-          />
-        ) : (
-          <div 
-            onClick={() => setIsEditingLabel(true)}
-            className="cursor-pointer hover:bg-white hover:bg-opacity-20 px-1 py-0.5 rounded"
-          >
-            {data.label}
-          </div>
-        )}
+      <div className="text-white text-sm font-medium mt-1 flex items-center">
+        <div
+          ref={labelRef}
+          contentEditable
+          suppressContentEditableWarning
+          data-placeholder="Clique para editar"
+          onFocus={(e) => {
+            e.stopPropagation();
+            focusEditable(labelRef);
+          }}
+          onBlur={handleLabelBlur}
+          onKeyDown={handleLabelKeyDown}
+          onMouseDown={(e) => e.stopPropagation()}
+          tabIndex={0}
+          role="textbox"
+          className="editable-text cursor-text hover:bg-white hover:bg-opacity-20 px-1 py-0.5 rounded nodrag flex-1 truncate focus:ring-2 focus:ring-white/40 focus:ring-offset-0"
+        />
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            focusEditable(labelRef);
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          className="ml-1 text-white/80 hover:text-white transition nodrag"
+          title="Editar título"
+          aria-label="Editar título"
+        >
+          <Edit className="w-4 h-4" />
+        </button>
       </div>
       
       {/* Description editável */}
-      {(data.description || isEditingDescription) && (
-        <div className="text-white text-xs opacity-80 mt-1">
-          {isEditingDescription ? (
-            <input
-              type="text"
-              value={tempDescription}
-              onChange={(e) => setTempDescription(e.target.value)}
-              onBlur={handleDescriptionSave}
-              onKeyDown={(e) => handleKeyPress(e, false)}
-              className="bg-transparent border-none outline-none text-white text-xs opacity-80 w-full"
-              placeholder="Descrição..."
-              autoFocus
-            />
-          ) : (
-            <div 
-              onClick={() => setIsEditingDescription(true)}
-              className="cursor-pointer hover:bg-white hover:bg-opacity-20 px-1 py-0.5 rounded"
-            >
-              {data.description}
-            </div>
-          )}
-        </div>
-      )}
+      <div className="text-white text-xs opacity-80 mt-1 flex items-center">
+        <div
+          ref={descriptionRef}
+          contentEditable
+          suppressContentEditableWarning
+          data-placeholder="Clique para adicionar descrição"
+          onFocus={(e) => {
+            e.stopPropagation();
+            focusEditable(descriptionRef);
+          }}
+          onBlur={handleDescriptionBlur}
+          onKeyDown={handleDescriptionKeyDown}
+          onMouseDown={(e) => e.stopPropagation()}
+          tabIndex={0}
+          role="textbox"
+          className="editable-text cursor-text hover:bg-white hover:bg-opacity-20 px-1 py-0.5 rounded nodrag flex-1 truncate focus:ring-2 focus:ring-white/40 focus:ring-offset-0"
+        />
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            focusEditable(descriptionRef);
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          className="ml-1 text-white/80 hover:text-white transition nodrag"
+          title="Editar descrição"
+          aria-label="Editar descrição"
+        >
+          <Edit className="w-3 h-3" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -497,20 +560,26 @@ export default function Canvas() {
 
   // Atualizar label do nó
   const updateNodeLabel = useCallback((nodeId: string, newLabel: string) => {
-    setNodes((nds) =>
-      nds.map((node) =>
+    console.log('Atualizando label:', nodeId, newLabel);
+    setNodes((nds) => {
+      const updatedNodes = nds.map((node) =>
         node.id === nodeId ? { ...node, data: { ...node.data, label: newLabel } } : node
-      )
-    );
+      );
+      console.log('Nós atualizados:', updatedNodes);
+      return updatedNodes;
+    });
   }, [setNodes]);
 
   // Atualizar descrição do nó
   const updateNodeDescription = useCallback((nodeId: string, newDescription: string) => {
-    setNodes((nds) =>
-      nds.map((node) =>
+    console.log('Atualizando descrição:', nodeId, newDescription);
+    setNodes((nds) => {
+      const updatedNodes = nds.map((node) =>
         node.id === nodeId ? { ...node, data: { ...node.data, description: newDescription } } : node
-      )
-    );
+      );
+      console.log('Nós atualizados:', updatedNodes);
+      return updatedNodes;
+    });
   }, [setNodes]);
 
   // Excluir nó
@@ -968,21 +1037,12 @@ export default function Canvas() {
         {/* Canvas principal */}
         <div className="h-full">
           <ReactFlow
-            nodes={nodes.map(node => ({
-              ...node,
-              data: {
-                ...node.data,
-                onLabelChange: (newLabel: string) => updateNodeLabel(node.id, newLabel),
-                onDescriptionChange: (newDescription: string) => updateNodeDescription(node.id, newDescription),
-                onDelete: () => deleteNode(node.id),
-                showHandles: showHandles,
-              }
-            }))}
+            nodes={nodes}
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
-            nodeTypes={nodeTypes}
+            nodeTypes={createNodeTypes(updateNodeLabel, updateNodeDescription, deleteNode, showHandles)}
             connectionLineType={ConnectionLineType.SmoothStep}
             defaultEdgeOptions={{
               type: 'smoothstep',

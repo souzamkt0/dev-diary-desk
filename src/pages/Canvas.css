@@ -199,6 +199,17 @@
   opacity: 1;
 }
 
+/* Conteúdo editável com placeholder */
+.editable-text[contenteditable='true'] {
+  min-height: 1.25rem;
+}
+
+.editable-text[contenteditable='true']:empty:before {
+  content: attr(data-placeholder);
+  color: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+}
+
 .react-flow__node .delete-button:hover {
   background: #dc2626;
   transform: scale(1.1);
