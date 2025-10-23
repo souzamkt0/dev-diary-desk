@@ -24,6 +24,7 @@ import './Canvas.css';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Plus, 
   Save, 
@@ -69,7 +70,8 @@ import {
   Maximize,
   Minimize,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  X
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -592,20 +594,48 @@ export default function Canvas() {
   // Salvar estratégia
   const saveStrategy = async () => {
     try {
-      const strategy = {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Usuário não autenticado');
+        return;
+      }
+
+      if (!strategyName.trim()) {
+        toast.error('Nome da estratégia é obrigatório');
+        return;
+      }
+
+      if (nodes.length === 0) {
+        toast.error('Adicione pelo menos um nó à estratégia');
+        return;
+      }
+
+      console.log('Salvando estratégia:', {
         name: strategyName,
-        nodes,
-        edges,
-        created_at: new Date().toISOString(),
-      };
+        nodes: nodes.length,
+        edges: edges.length
+      });
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('strategies')
-        .insert([strategy]);
+        .insert({
+          user_id: user.id,
+          name: strategyName.trim(),
+          nodes: nodes,
+          edges: edges
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
-
-      toast.success('Estratégia salva com sucesso!');
+      if (error) {
+        console.error('Erro ao salvar estratégia:', error);
+        toast.error(`Erro ao salvar estratégia: ${error.message}`);
+      } else {
+        console.log('Estratégia salva com sucesso:', data);
+        toast.success('Estratégia salva com sucesso!');
+        // Recarregar lista de estratégias
+        loadSavedStrategies();
+      }
     } catch (error) {
       console.error('Erro ao salvar estratégia:', error);
       toast.error('Erro ao salvar estratégia');
@@ -615,22 +645,95 @@ export default function Canvas() {
   // Carregar estratégia
   const loadStrategy = async (id: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Usuário não autenticado');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('strategies')
         .select('*')
         .eq('id', id)
+        .eq('user_id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao carregar estratégia:', error);
+        toast.error(`Erro ao carregar estratégia: ${error.message}`);
+        return;
+      }
 
       setNodes(data.nodes || []);
       setEdges(data.edges || []);
       setStrategyName(data.name);
-      toast.success('Estratégia carregada!');
+      setSelectedStrategyId(data.id);
+      toast.success('Estratégia carregada com sucesso!');
     } catch (error) {
       console.error('Erro ao carregar estratégia:', error);
       toast.error('Erro ao carregar estratégia');
     }
+  };
+
+  // Listar estratégias salvas
+  const [savedStrategies, setSavedStrategies] = useState<any[]>([]);
+  const [showStrategiesList, setShowStrategiesList] = useState(false);
+  const [selectedStrategyId, setSelectedStrategyId] = useState<string>('');
+  const [isLoadingStrategies, setIsLoadingStrategies] = useState(false);
+
+  const loadSavedStrategies = async (showList = false) => {
+    try {
+      setIsLoadingStrategies(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Usuário não autenticado');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('strategies')
+        .select('id, name, created_at, updated_at')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao carregar estratégias:', error);
+        toast.error(`Erro ao carregar estratégias: ${error.message}`);
+        return;
+      }
+
+      setSavedStrategies(data || []);
+      if (showList) {
+        setShowStrategiesList(true);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar estratégias:', error);
+      toast.error('Erro ao carregar estratégias');
+    } finally {
+      setIsLoadingStrategies(false);
+    }
+  };
+
+  // Carregar estratégias automaticamente quando o componente montar
+  useEffect(() => {
+    loadSavedStrategies();
+  }, []);
+
+  // Carregar estratégia selecionada
+  const handleStrategySelect = (strategyId: string) => {
+    if (strategyId && strategyId !== '') {
+      loadStrategy(strategyId);
+      setSelectedStrategyId(strategyId);
+    }
+  };
+
+  // Limpar seleção e criar nova estratégia
+  const clearSelection = () => {
+    setSelectedStrategyId('');
+    setStrategyName('Nova Estratégia');
+    setNodes([]);
+    setEdges([]);
+    toast.success('Nova estratégia criada!');
   };
 
   // Executar estratégia
@@ -864,13 +967,41 @@ export default function Canvas() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Canvas de Estratégias
             </h1>
-            <input
-              type="text"
-              value={strategyName}
-              onChange={(e) => setStrategyName(e.target.value)}
-              className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="Nome da estratégia"
-            />
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={strategyName}
+                onChange={(e) => setStrategyName(e.target.value)}
+                className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="Nome da estratégia"
+              />
+              <Select value={selectedStrategyId} onValueChange={handleStrategySelect}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder={isLoadingStrategies ? "Carregando..." : "Carregar estratégia"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {savedStrategies.map((strategy) => (
+                    <SelectItem key={strategy.id} value={strategy.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{strategy.name}</span>
+                        <span className="text-xs text-gray-500">
+                          {new Date(strategy.updated_at).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                onClick={clearSelection} 
+                variant="outline" 
+                size="sm"
+                className="whitespace-nowrap"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Nova
+              </Button>
+            </div>
           </div>
           <div className="flex items-center space-x-2">
             <Button
@@ -884,6 +1015,10 @@ export default function Canvas() {
             <Button onClick={saveStrategy} variant="outline">
               <Save className="w-4 h-4 mr-2" />
               Salvar
+            </Button>
+            <Button onClick={loadSavedStrategies} variant="outline">
+              <Upload className="w-4 h-4 mr-2" />
+              Carregar
             </Button>
             <Button onClick={exportStrategy} variant="outline">
               <Download className="w-4 h-4 mr-2" />
@@ -1085,6 +1220,68 @@ export default function Canvas() {
                 </CardContent>
               </Card>
             </Panel>
+
+            {/* Painel de Estratégias Salvas */}
+            {showStrategiesList && (
+              <Panel position="top-left">
+                <Card className="w-80 max-h-96 overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm">Estratégias Salvas</CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowStrategiesList(false)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2 max-h-80 overflow-y-auto">
+                    {savedStrategies.length === 0 ? (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        Nenhuma estratégia salva
+                      </p>
+                    ) : (
+                      savedStrategies.map((strategy) => (
+                        <div
+                          key={strategy.id}
+                          className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                          onClick={() => {
+                            loadStrategy(strategy.id);
+                            setShowStrategiesList(false);
+                          }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-medium truncate">
+                                {strategy.name}
+                              </h4>
+                              <p className="text-xs text-gray-500">
+                                {new Date(strategy.updated_at).toLocaleDateString('pt-BR')}
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                loadStrategy(strategy.id);
+                                setShowStrategiesList(false);
+                              }}
+                              className="h-6 w-6 p-0"
+                            >
+                              <ArrowRight className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              </Panel>
+            )}
           </ReactFlow>
         </div>
       </div>
